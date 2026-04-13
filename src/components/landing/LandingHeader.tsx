@@ -24,12 +24,12 @@ export const LandingHeader = () => {
           >
             Workshops
           </Link>
-          <a
+          <Link
             className="text-landing-secondary dark:text-slate-400 hover:text-landing-primary dark:hover:text-white transition-colors"
-            href="/#mentoring"
+            to="/mentoring"
           >
             Mentoring
-          </a>
+          </Link>
           <a
             className="text-landing-secondary dark:text-slate-400 hover:text-landing-primary dark:hover:text-white transition-colors"
             href="/#agenda"

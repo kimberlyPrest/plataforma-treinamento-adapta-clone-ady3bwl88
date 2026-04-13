@@ -10,6 +10,7 @@ import LessonPlayer from './pages/LessonPlayer'
 import Login from './pages/Login'
 import Landing from './pages/Landing'
 import Workshops from './pages/Workshops'
+import Mentoring from './pages/Mentoring'
 import Layout from './components/Layout'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminCourseEdit from './pages/admin/AdminCourseEdit'
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/signup" element={<Login />} />
             <Route path="/" element={<Landing />} />
             <Route path="/workshops" element={<Workshops />} />
+            <Route path="/mentoring" element={<Mentoring />} />
 
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
