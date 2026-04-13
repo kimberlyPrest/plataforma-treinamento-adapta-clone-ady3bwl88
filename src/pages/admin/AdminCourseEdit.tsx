@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { CourseForm } from '@/components/admin/CourseForm'
 import { CurriculumManager } from '@/components/admin/CurriculumManager'
+import { CourseAccessManager } from '@/components/admin/CourseAccessManager'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -73,6 +74,12 @@ export default function AdminCourseEdit() {
             >
               Curriculum Builder
             </TabsTrigger>
+            <TabsTrigger
+              value="access"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 px-0 font-jetbrains text-xs uppercase tracking-widest text-gray-500 data-[state=active]:text-black"
+            >
+              Access & Students
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="details" className="mt-6">
@@ -84,6 +91,12 @@ export default function AdminCourseEdit() {
           <TabsContent value="curriculum" className="mt-6">
             <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
               <CurriculumManager courseId={course.id} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="access" className="mt-6">
+            <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
+              <CourseAccessManager courseId={course.id} />
             </div>
           </TabsContent>
         </Tabs>

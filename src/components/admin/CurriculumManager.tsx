@@ -19,7 +19,9 @@ import {
   CheckCircle,
   FileText,
   AlignLeft,
+  Library,
 } from 'lucide-react'
+import { ImportFromLibraryDialog } from './ImportFromLibraryDialog'
 
 interface Lesson {
   id: string
@@ -46,6 +48,7 @@ export function CurriculumManager({ courseId }: { courseId: string }) {
     null,
   )
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null)
+  const [showLibrary, setShowLibrary] = useState(false)
 
   const fetchCurriculum = async () => {
     const { data: mods, error } = await supabase
@@ -150,13 +153,29 @@ export function CurriculumManager({ courseId }: { courseId: string }) {
             className="bg-white"
           />
         </div>
-        <Button
-          onClick={addModule}
-          className="bg-[#111111] hover:bg-[#333333] text-white"
-        >
-          <Plus className="w-4 h-4 mr-2" /> Add Module
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowLibrary(true)}
+            className="bg-white border-gray-200"
+          >
+            <Library className="w-4 h-4 mr-2" /> Library
+          </Button>
+          <Button
+            onClick={addModule}
+            className="bg-[#111111] hover:bg-[#333333] text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add Module
+          </Button>
+        </div>
       </div>
+
+      <ImportFromLibraryDialog
+        courseId={courseId}
+        open={showLibrary}
+        onOpenChange={setShowLibrary}
+        onImportComplete={fetchCurriculum}
+      />
 
       <div className="space-y-4">
         {modules.map((module, index) => (

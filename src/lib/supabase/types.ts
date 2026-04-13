@@ -73,6 +73,7 @@ export type Database = {
       }
       lessons: {
         Row: {
+          content: string | null
           created_at: string
           duration: string | null
           id: string
@@ -80,10 +81,12 @@ export type Database = {
           is_test: boolean | null
           module_id: string
           order_index: number
+          pdf_url: string | null
           title: string
           video_url: string | null
         }
         Insert: {
+          content?: string | null
           created_at?: string
           duration?: string | null
           id?: string
@@ -91,10 +94,12 @@ export type Database = {
           is_test?: boolean | null
           module_id: string
           order_index?: number
+          pdf_url?: string | null
           title: string
           video_url?: string | null
         }
         Update: {
+          content?: string | null
           created_at?: string
           duration?: string | null
           id?: string
@@ -102,6 +107,7 @@ export type Database = {
           is_test?: boolean | null
           module_id?: string
           order_index?: number
+          pdf_url?: string | null
           title?: string
           video_url?: string | null
         }
@@ -448,6 +454,8 @@ export const Constants = {
 //   is_locked: boolean (nullable, default: false)
 //   order_index: integer (not null, default: 0)
 //   created_at: timestamp with time zone (not null, default: timezone('utc'::text, now()))
+//   content: text (nullable)
+//   pdf_url: text (nullable)
 // Table: modules
 //   id: uuid (not null, default: gen_random_uuid())
 //   course_id: uuid (not null)

@@ -7,6 +7,8 @@ import { useOrganization } from '@/context/OrganizationContext'
 import { AdminBentoCard } from '@/components/admin/AdminBentoCard'
 import { LayoutDashboard, Users, Activity } from 'lucide-react'
 import { useEffect } from 'react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { LibraryManager } from '@/components/admin/LibraryManager'
 
 export default function AdminDashboard() {
   const { organization } = useOrganization()
@@ -42,21 +44,48 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          {/* Row 1 */}
-          <BrandingSettings colSpan={2} />
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="bg-transparent border-b border-gray-200 w-full justify-start rounded-none h-auto p-0 space-x-8">
+            <TabsTrigger
+              value="overview"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 px-0 font-jetbrains text-xs uppercase tracking-widest text-gray-500 data-[state=active]:text-black"
+            >
+              Overview & Settings
+            </TabsTrigger>
+            <TabsTrigger
+              value="library"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 px-0 font-jetbrains text-xs uppercase tracking-widest text-gray-500 data-[state=active]:text-black"
+            >
+              Content Library
+            </TabsTrigger>
+          </TabsList>
 
-          <VisualSettings colSpan={2} />
+          <TabsContent value="overview" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+              <BrandingSettings colSpan={2} />
+              <VisualSettings colSpan={2} />
+              <QuickStats colSpan={4} />
+              <InviteMembers />
+              <CoursesTable />
+            </div>
+          </TabsContent>
 
-          {/* Row 2 */}
-          <QuickStats colSpan={4} />
-
-          {/* Row 3 */}
-          <InviteMembers />
-
-          {/* Row 4 */}
-          <CoursesTable />
-        </div>
+          <TabsContent value="library" className="mt-6">
+            <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
+              <div className="mb-6">
+                <h2 className="text-xl font-inter font-light tracking-tight text-[#111111]">
+                  GLOBAL CONTENT <span className="text-gray-300 mx-2">//</span>{' '}
+                  LIBRARY
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Create reusable modules and lessons to quickly build
+                  personalized courses.
+                </p>
+              </div>
+              <LibraryManager />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )
