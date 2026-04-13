@@ -15,6 +15,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      course_enrollments: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'course_enrollments_course_id_fkey'
+            columns: ['course_id']
+            isOneToOne: false
+            referencedRelation: 'courses'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'course_enrollments_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       courses: {
         Row: {
           created_at: string
@@ -25,6 +61,7 @@ export type Database = {
           image_query: string | null
           instructor_avatar: string | null
           instructor_name: string | null
+          is_private: boolean | null
           label: string | null
           organization_id: string
           rating: number | null
@@ -40,6 +77,7 @@ export type Database = {
           image_query?: string | null
           instructor_avatar?: string | null
           instructor_name?: string | null
+          is_private?: boolean | null
           label?: string | null
           organization_id: string
           rating?: number | null
@@ -55,6 +93,7 @@ export type Database = {
           image_query?: string | null
           instructor_avatar?: string | null
           instructor_name?: string | null
+          is_private?: boolean | null
           label?: string | null
           organization_id?: string
           rating?: number | null
@@ -117,6 +156,95 @@ export type Database = {
             columns: ['module_id']
             isOneToOne: false
             referencedRelation: 'modules'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      library_lessons: {
+        Row: {
+          content: string | null
+          created_at: string
+          duration: string | null
+          id: string
+          is_test: boolean | null
+          library_module_id: string | null
+          order_index: number
+          organization_id: string
+          pdf_url: string | null
+          title: string
+          video_url: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          duration?: string | null
+          id?: string
+          is_test?: boolean | null
+          library_module_id?: string | null
+          order_index?: number
+          organization_id: string
+          pdf_url?: string | null
+          title: string
+          video_url?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          duration?: string | null
+          id?: string
+          is_test?: boolean | null
+          library_module_id?: string | null
+          order_index?: number
+          organization_id?: string
+          pdf_url?: string | null
+          title?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'library_lessons_library_module_id_fkey'
+            columns: ['library_module_id']
+            isOneToOne: false
+            referencedRelation: 'library_modules'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'library_lessons_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      library_modules: {
+        Row: {
+          created_at: string
+          id: string
+          order_index: number
+          organization_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          organization_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          organization_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'library_modules_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
             referencedColumns: ['id']
           },
         ]
@@ -430,6 +558,11 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: course_enrollments
+//   id: uuid (not null, default: gen_random_uuid())
+//   course_id: uuid (not null)
+//   profile_id: uuid (not null)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: courses
 //   id: uuid (not null, default: gen_random_uuid())
 //   organization_id: uuid (not null)
@@ -444,6 +577,7 @@ export const Constants = {
 //   rating: numeric (nullable)
 //   reviews: integer (nullable, default: 0)
 //   created_at: timestamp with time zone (not null, default: timezone('utc'::text, now()))
+//   is_private: boolean (nullable, default: false)
 // Table: lessons
 //   id: uuid (not null, default: gen_random_uuid())
 //   module_id: uuid (not null)
@@ -456,6 +590,24 @@ export const Constants = {
 //   created_at: timestamp with time zone (not null, default: timezone('utc'::text, now()))
 //   content: text (nullable)
 //   pdf_url: text (nullable)
+// Table: library_lessons
+//   id: uuid (not null, default: gen_random_uuid())
+//   library_module_id: uuid (nullable)
+//   organization_id: uuid (not null)
+//   title: text (not null)
+//   duration: text (nullable)
+//   video_url: text (nullable)
+//   is_test: boolean (nullable, default: false)
+//   content: text (nullable)
+//   pdf_url: text (nullable)
+//   order_index: integer (not null, default: 0)
+//   created_at: timestamp with time zone (not null, default: now())
+// Table: library_modules
+//   id: uuid (not null, default: gen_random_uuid())
+//   organization_id: uuid (not null)
+//   title: text (not null)
+//   created_at: timestamp with time zone (not null, default: now())
+//   order_index: integer (not null, default: 0)
 // Table: modules
 //   id: uuid (not null, default: gen_random_uuid())
 //   course_id: uuid (not null)
@@ -493,12 +645,24 @@ export const Constants = {
 //   last_watched_at: timestamp with time zone (nullable, default: timezone('utc'::text, now()))
 
 // --- CONSTRAINTS ---
+// Table: course_enrollments
+//   FOREIGN KEY course_enrollments_course_id_fkey: FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+//   UNIQUE course_enrollments_course_id_profile_id_key: UNIQUE (course_id, profile_id)
+//   PRIMARY KEY course_enrollments_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY course_enrollments_profile_id_fkey: FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
 // Table: courses
 //   FOREIGN KEY courses_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id)
 //   PRIMARY KEY courses_pkey: PRIMARY KEY (id)
 // Table: lessons
 //   FOREIGN KEY lessons_module_id_fkey: FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
 //   PRIMARY KEY lessons_pkey: PRIMARY KEY (id)
+// Table: library_lessons
+//   FOREIGN KEY library_lessons_library_module_id_fkey: FOREIGN KEY (library_module_id) REFERENCES library_modules(id) ON DELETE CASCADE
+//   FOREIGN KEY library_lessons_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+//   PRIMARY KEY library_lessons_pkey: PRIMARY KEY (id)
+// Table: library_modules
+//   FOREIGN KEY library_modules_organization_id_fkey: FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+//   PRIMARY KEY library_modules_pkey: PRIMARY KEY (id)
 // Table: modules
 //   FOREIGN KEY modules_course_id_fkey: FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 //   PRIMARY KEY modules_pkey: PRIMARY KEY (id)
@@ -516,6 +680,11 @@ export const Constants = {
 //   UNIQUE user_progress_profile_id_lesson_id_key: UNIQUE (profile_id, lesson_id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: course_enrollments
+//   Policy "Admins can manage course_enrollments" (ALL, PERMISSIVE) roles={public}
+//     USING: (EXISTS ( SELECT 1    FROM (courses c      JOIN profiles p ON ((p.organization_id = c.organization_id)))   WHERE ((c.id = course_enrollments.course_id) AND (p.id = auth.uid()) AND (p.role = 'admin'::text))))
+//   Policy "Users can read own enrollments" (SELECT, PERMISSIVE) roles={public}
+//     USING: (profile_id = auth.uid())
 // Table: courses
 //   Policy "Admins can delete courses" (DELETE, PERMISSIVE) roles={public}
 //     USING: (organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))
@@ -524,12 +693,24 @@ export const Constants = {
 //   Policy "Admins can update courses" (UPDATE, PERMISSIVE) roles={public}
 //     USING: (organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))
 //   Policy "Users can read courses of their organization" (SELECT, PERMISSIVE) roles={public}
-//     USING: (organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE (profiles.id = auth.uid())))
+//     USING: ((organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE (profiles.id = auth.uid()))) AND ((is_private = false) OR (auth.uid() IN ( SELECT course_enrollments.profile_id    FROM course_enrollments   WHERE (course_enrollments.course_id = course_enrollments.id))) OR ('admin'::text = ( SELECT profiles.role    FROM profiles   WHERE (profiles.id = auth.uid())))))
 // Table: lessons
 //   Policy "Admins can all lessons" (ALL, PERMISSIVE) roles={public}
 //     USING: (module_id IN ( SELECT m.id    FROM ((modules m      JOIN courses c ON ((c.id = m.course_id)))      JOIN profiles p ON ((p.organization_id = c.organization_id)))   WHERE ((p.id = auth.uid()) AND (p.role = 'admin'::text))))
 //   Policy "Users can read lessons of their organization" (SELECT, PERMISSIVE) roles={public}
 //     USING: (module_id IN ( SELECT m.id    FROM ((modules m      JOIN courses c ON ((c.id = m.course_id)))      JOIN profiles p ON ((p.organization_id = c.organization_id)))   WHERE (p.id = auth.uid())))
+// Table: library_lessons
+//   Policy "Admins can manage library_lessons" (ALL, PERMISSIVE) roles={public}
+//     USING: (organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))
+//     WITH CHECK: (organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))
+//   Policy "Users can read library_lessons" (SELECT, PERMISSIVE) roles={public}
+//     USING: (organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE (profiles.id = auth.uid())))
+// Table: library_modules
+//   Policy "Admins can manage library_modules" (ALL, PERMISSIVE) roles={public}
+//     USING: (organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))
+//     WITH CHECK: (organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))
+//   Policy "Users can read library_modules" (SELECT, PERMISSIVE) roles={public}
+//     USING: (organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE (profiles.id = auth.uid())))
 // Table: modules
 //   Policy "Admins can all modules" (ALL, PERMISSIVE) roles={public}
 //     USING: (course_id IN ( SELECT c.id    FROM (courses c      JOIN profiles p ON ((p.organization_id = c.organization_id)))   WHERE ((p.id = auth.uid()) AND (p.role = 'admin'::text))))
@@ -619,6 +800,8 @@ export const Constants = {
 //
 
 // --- INDEXES ---
+// Table: course_enrollments
+//   CREATE UNIQUE INDEX course_enrollments_course_id_profile_id_key ON public.course_enrollments USING btree (course_id, profile_id)
 // Table: organizations
 //   CREATE UNIQUE INDEX organizations_slug_key ON public.organizations USING btree (slug)
 // Table: user_progress
