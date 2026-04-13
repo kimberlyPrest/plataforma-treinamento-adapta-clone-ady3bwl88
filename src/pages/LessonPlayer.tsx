@@ -1,21 +1,19 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
-import { Clock, Share2, Star, FileText, CheckCircle } from 'lucide-react'
+import {
+  ChevronLeft,
+  CheckCircle,
+  Circle,
+  ListVideo,
+  Loader2,
+} from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { LessonSidebar } from '@/components/LessonSidebar'
 import { LessonVideoPlayer } from '@/components/LessonVideoPlayer'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface Course {
   id: string
@@ -53,19 +51,21 @@ interface Lesson {
 export default function LessonPlayer() {
   const { courseId, lessonId } = useParams()
   const { user } = useAuth()
+  const navigate = useNavigate()
+
   const [course, setCourse] = useState<Course | null>(null)
   const [modules, setModules] = useState<Module[]>([])
   const [loading, setLoading] = useState(true)
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null)
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null)
   const [progressMap, setProgressMap] = useState<Record<string, boolean>>({})
+  const [sidebarOpen, setSidebarOpen] = useState(false) // For mobile
 
   useEffect(() => {
     async function fetchData() {
       if (!courseId || !user) return
       setLoading(true)
 
-      // Fetch course
       const { data: courseData, error: courseError } = await supabase
         .from('courses')
         .select('*')
@@ -80,8 +80,6 @@ export default function LessonPlayer() {
 
       setCourse(courseData)
 
-      // Fetch modules and lessons
-      // Added video_url to selection
       const { data: modulesData, error: modulesError } = await supabase
         .from('modules')
         .select(
@@ -102,7 +100,6 @@ export default function LessonPlayer() {
         return
       }
 
-      // Sort lessons
       const processedModules = modulesData.map((m: any) => ({
         ...m,
         lessons: m.lessons.sort(
@@ -112,7 +109,6 @@ export default function LessonPlayer() {
 
       setModules(processedModules)
 
-      // Fetch progress
       const { data: progressData } = await supabase
         .from('user_progress')
         .select('lesson_id, is_completed')
@@ -132,7 +128,6 @@ export default function LessonPlayer() {
 
   useEffect(() => {
     if (lessonId && modules.length > 0) {
-      // Find active module and lesson
       for (const mod of modules) {
         const lesson = mod.lessons.find((l) => l.id === lessonId)
         if (lesson) {
@@ -142,7 +137,6 @@ export default function LessonPlayer() {
         }
       }
     } else if (modules.length > 0 && modules[0].lessons.length > 0) {
-      // Default to first
       setActiveModuleId(modules[0].id)
       setActiveLesson(modules[0].lessons[0])
     }
@@ -152,8 +146,6 @@ export default function LessonPlayer() {
     if (!activeLesson || !user) return
 
     const newStatus = !progressMap[activeLesson.id]
-
-    // Update local state immediately
     setProgressMap((prev) => ({ ...prev, [activeLesson.id]: newStatus }))
 
     const { error } = await supabase.from('user_progress').upsert(
@@ -163,33 +155,32 @@ export default function LessonPlayer() {
         is_completed: newStatus,
         last_watched_at: new Date().toISOString(),
       },
-      {
-        onConflict: 'profile_id,lesson_id',
-      },
+      { onConflict: 'profile_id,lesson_id' },
     )
 
     if (error) {
       toast.error('Failed to save progress')
-      // Revert local state
       setProgressMap((prev) => ({ ...prev, [activeLesson.id]: !newStatus }))
     } else {
-      if (newStatus) {
-        toast.success('Lesson marked as completed')
-      }
+      if (newStatus) toast.success('Lesson marked as completed')
     }
   }
 
   if (loading) {
     return (
-      <div className="w-full min-h-[calc(100vh-64px)] flex items-center justify-center bg-[#2B2B2B]">
-        <Loader2 className="w-8 h-8 animate-spin text-white" />
+      <div className="fixed inset-0 flex items-center justify-center bg-zinc-950 z-50">
+        <Loader2 className="w-10 h-10 animate-spin text-red-600" />
       </div>
     )
   }
 
-  if (!course) return <div>Course not found</div>
+  if (!course)
+    return (
+      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
+        Course not found
+      </div>
+    )
 
-  // Enhance modules with progress for sidebar
   const modulesWithProgress = modules.map((m) => ({
     ...m,
     lessons: m.lessons.map((l) => ({
@@ -200,97 +191,75 @@ export default function LessonPlayer() {
 
   const completedCount = Object.values(progressMap).filter(Boolean).length
   const totalCount = modules.reduce((acc, m) => acc + m.lessons.length, 0)
-
   const currentModuleTitle = modules.find((m) => m.id === activeModuleId)?.title
 
   return (
-    <div className="w-full min-h-[calc(100vh-64px)] bg-[#2B2B2B] flex flex-col font-sans">
-      {/* Course Hero Section */}
-      <div className="w-full px-6 py-8 md:px-12 md:py-10 bg-[#2B2B2B] text-white">
-        <div className="max-w-[1400px] mx-auto">
-          {/* User/Instructor Info */}
-          <div className="flex items-center gap-3 mb-4">
-            <img
-              src={
-                course.instructor_avatar ||
-                'https://img.usecurling.com/ppl/thumbnail?gender=male'
-              }
-              alt={course.instructor_name || 'Instructor'}
-              className="w-8 h-8 rounded-full border border-white/10"
-            />
-            <span className="text-sm font-medium text-white/90">
-              {course.instructor_name}
+    <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950 text-white font-sans overflow-hidden">
+      {/* Top Navigation Bar */}
+      <header className="h-16 flex-shrink-0 flex items-center justify-between px-4 lg:px-8 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800/50 z-10 relative">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/')}
+            className="text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-full"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex flex-col">
+            <span className="text-xs text-zinc-500 font-medium tracking-wider uppercase hidden sm:block">
+              {course.title}
+            </span>
+            <h1 className="text-sm sm:text-base font-semibold text-zinc-100 line-clamp-1">
+              {currentModuleTitle ? `${currentModuleTitle} ` : ''}
+            </h1>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-3 text-sm text-zinc-400">
+            <span className="font-medium text-zinc-300">
+              {Math.round((completedCount / totalCount) * 100 || 0)}% completed
             </span>
           </div>
 
-          {/* Title and Metadata */}
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-            <div>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-grotesk font-bold tracking-tight mb-4 text-white">
-                {course.title}
-              </h1>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-white/70 font-mono">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  {course.duration_text}
-                </div>
-                <div className="w-1 h-1 bg-white/30 rounded-full" />
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  {totalCount} lessons
-                </div>
-                {course.rating && (
-                  <>
-                    <div className="w-1 h-1 bg-white/30 rounded-full" />
-                    <div className="flex items-center gap-1.5">
-                      <Star className="w-4 h-4 fill-brand-yellow text-brand-yellow" />
-                      <span className="text-white">
-                        {course.rating} ({course.reviews} reviews)
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {course.label && (
-                <div className="mt-6">
-                  <span className="inline-block px-3 py-1 rounded bg-white/10 text-xs font-medium text-white/80 border border-white/10">
-                    {course.label}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-3">
-              {activeLesson && (
-                <Button
-                  onClick={handleToggleComplete}
-                  className={
-                    progressMap[activeLesson.id]
-                      ? 'bg-green-600 hover:bg-green-700 text-white'
-                      : 'bg-[#FF6B6B] hover:bg-[#FF6B6B]/90 text-white'
-                  }
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  {progressMap[activeLesson.id] ? 'Completed' : 'Mark Complete'}
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                className="border-white/20 bg-transparent text-white hover:bg-white/10 h-12 px-6 rounded-lg gap-2"
-              >
-                <Share2 className="w-4 h-4" />
-                Share
-              </Button>
-            </div>
-          </div>
+          {/* Mobile Sidebar Toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden text-zinc-400 hover:text-white"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            <ListVideo className="w-5 h-5" />
+          </Button>
         </div>
-      </div>
+      </header>
 
-      {/* Main Content Area - White Card */}
-      <div className="flex-1 px-6 pb-12 md:px-12">
-        <div className="max-w-[1400px] mx-auto bg-white rounded-2xl shadow-xl overflow-hidden min-h-[600px] flex flex-col lg:flex-row">
+      {/* Main Content Area */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Left/Main Content: Video Player */}
+        <main className="flex-1 flex flex-col overflow-y-auto dark-scrollbar scroll-smooth">
+          <div className="w-full max-w-[1600px] mx-auto flex flex-col min-h-full">
+            <LessonVideoPlayer
+              courseDescription={course.description}
+              videoUrl={activeLesson?.video_url}
+              pdfUrl={activeLesson?.pdf_url}
+              content={activeLesson?.content}
+              title={activeLesson?.title}
+              isCompleted={progressMap[activeLesson?.id || '']}
+              onToggleComplete={handleToggleComplete}
+            />
+          </div>
+        </main>
+
+        {/* Right Sidebar: Modules & Lessons */}
+        <aside
+          className={cn(
+            'absolute inset-y-0 right-0 w-full sm:w-[400px] bg-zinc-950 border-l border-zinc-800/50 transform transition-transform duration-300 ease-in-out z-20 flex flex-col',
+            'lg:relative lg:transform-none lg:w-[400px] xl:w-[450px]',
+            sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0',
+          )}
+        >
           <LessonSidebar
             courseTitle={course.title}
             modules={modulesWithProgress}
@@ -299,53 +268,17 @@ export default function LessonPlayer() {
             completedLessons={completedCount}
             totalLessons={totalCount}
             courseId={course.id}
+            onClose={() => setSidebarOpen(false)}
           />
+        </aside>
 
-          {/* Player Area */}
-          <div className="flex-1 flex flex-col min-w-0 bg-white">
-            {/* Breadcrumb Header */}
-            <div className="px-8 py-6 border-b border-gray-100 hidden md:block">
-              <div className="mb-2">
-                <span className="text-sm font-bold text-gray-900 block">
-                  Introduction
-                </span>
-              </div>
-              <Breadcrumb>
-                <BreadcrumbList className="text-xs text-gray-500 font-medium">
-                  <BreadcrumbItem>
-                    <BreadcrumbLink href="#" className="hover:text-[#FF6B6B]">
-                      {course.instructor_name}
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbLink href="#" className="hover:text-[#FF6B6B]">
-                      Course
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbLink href="#" className="hover:text-[#FF6B6B]">
-                      {currentModuleTitle?.split(':')[0] || 'Module'}
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbPage className="text-gray-900">
-                    {activeLesson?.title || 'Overview'}
-                  </BreadcrumbPage>
-                </BreadcrumbList>
-              </Breadcrumb>
-            </div>
-
-            <LessonVideoPlayer
-              courseDescription={course.description}
-              videoUrl={activeLesson?.video_url}
-              pdfUrl={activeLesson?.pdf_url}
-              content={activeLesson?.content}
-              title={activeLesson?.title}
-            />
-          </div>
-        </div>
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-10 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
       </div>
     </div>
   )

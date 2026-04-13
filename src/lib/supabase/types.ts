@@ -414,7 +414,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_course_admin: { Args: { check_course_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
@@ -682,7 +682,7 @@ export const Constants = {
 // --- ROW LEVEL SECURITY POLICIES ---
 // Table: course_enrollments
 //   Policy "Admins can manage course_enrollments" (ALL, PERMISSIVE) roles={public}
-//     USING: (EXISTS ( SELECT 1    FROM (courses c      JOIN profiles p ON ((p.organization_id = c.organization_id)))   WHERE ((c.id = course_enrollments.course_id) AND (p.id = auth.uid()) AND (p.role = 'admin'::text))))
+//     USING: is_course_admin(course_id)
 //   Policy "Users can read own enrollments" (SELECT, PERMISSIVE) roles={public}
 //     USING: (profile_id = auth.uid())
 // Table: courses
@@ -690,10 +690,12 @@ export const Constants = {
 //     USING: (organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))
 //   Policy "Admins can insert courses" (INSERT, PERMISSIVE) roles={public}
 //     WITH CHECK: (organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))
+//   Policy "Admins can read courses of their organization" (SELECT, PERMISSIVE) roles={public}
+//     USING: (organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))
 //   Policy "Admins can update courses" (UPDATE, PERMISSIVE) roles={public}
 //     USING: (organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))
-//   Policy "Users can read courses of their organization" (SELECT, PERMISSIVE) roles={public}
-//     USING: ((organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE (profiles.id = auth.uid()))) AND ((is_private = false) OR (auth.uid() IN ( SELECT course_enrollments.profile_id    FROM course_enrollments   WHERE (course_enrollments.course_id = course_enrollments.id))) OR ('admin'::text = ( SELECT profiles.role    FROM profiles   WHERE (profiles.id = auth.uid())))))
+//   Policy "Students can read courses of their organization" (SELECT, PERMISSIVE) roles={public}
+//     USING: ((organization_id IN ( SELECT profiles.organization_id    FROM profiles   WHERE ((profiles.id = auth.uid()) AND ((profiles.role = 'student'::text) OR (profiles.role IS NULL))))) AND ((is_private = false) OR (id IN ( SELECT course_enrollments.course_id    FROM course_enrollments   WHERE (course_enrollments.profile_id = auth.uid())))))
 // Table: lessons
 //   Policy "Admins can all lessons" (ALL, PERMISSIVE) roles={public}
 //     USING: (module_id IN ( SELECT m.id    FROM ((modules m      JOIN courses c ON ((c.id = m.course_id)))      JOIN profiles p ON ((p.organization_id = c.organization_id)))   WHERE ((p.id = auth.uid()) AND (p.role = 'admin'::text))))
@@ -796,6 +798,23 @@ export const Constants = {
 //       -- Silently handle errors so user creation doesn't fail
 //       RETURN new;
 //   END;
+//   $function$
+//
+// FUNCTION is_course_admin(uuid)
+//   CREATE OR REPLACE FUNCTION public.is_course_admin(check_course_id uuid)
+//    RETURNS boolean
+//    LANGUAGE sql
+//    STABLE SECURITY DEFINER
+//    SET search_path TO 'public'
+//   AS $function$
+//     SELECT EXISTS (
+//       SELECT 1
+//       FROM public.profiles p
+//       JOIN public.courses c ON c.organization_id = p.organization_id
+//       WHERE p.id = auth.uid()
+//         AND p.role = 'admin'
+//         AND c.id = check_course_id
+//     );
 //   $function$
 //
 
