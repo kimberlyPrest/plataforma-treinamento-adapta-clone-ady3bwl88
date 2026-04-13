@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
+import { LandingLayout } from '@/components/landing/LandingLayout'
 import { LandingHero } from '@/components/landing/LandingHero'
 import { LandingServices } from '@/components/landing/LandingServices'
 import { LandingExpertise } from '@/components/landing/LandingExpertise'
@@ -24,11 +25,11 @@ const Landing = () => {
   }
 
   return (
-    <div className="bg-landing-surface font-sans text-landing-on-surface min-h-screen">
+    <LandingLayout>
       <LandingHero />
       <LandingServices />
       <LandingExpertise />
-    </div>
+    </LandingLayout>
   )
 }
 
