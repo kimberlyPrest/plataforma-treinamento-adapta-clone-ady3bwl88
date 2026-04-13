@@ -46,6 +46,8 @@ interface Lesson {
   order_index: number
   is_completed?: boolean
   video_url: string | null
+  content: string | null
+  pdf_url: string | null
 }
 
 export default function LessonPlayer() {
@@ -87,7 +89,7 @@ export default function LessonPlayer() {
           id,
           title,
           lessons (
-            id, title, duration, is_test, is_locked, order_index, video_url
+            id, title, duration, is_test, is_locked, order_index, video_url, content, pdf_url
           )
         `,
         )
@@ -338,6 +340,8 @@ export default function LessonPlayer() {
             <LessonVideoPlayer
               courseDescription={course.description}
               videoUrl={activeLesson?.video_url}
+              pdfUrl={activeLesson?.pdf_url}
+              content={activeLesson?.content}
               title={activeLesson?.title}
             />
           </div>

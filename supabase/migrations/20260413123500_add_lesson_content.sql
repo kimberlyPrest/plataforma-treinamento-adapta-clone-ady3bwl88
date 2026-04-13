@@ -1,0 +1,2 @@
+ALTER TABLE public.lessons ADD COLUMN IF NOT EXISTS content TEXT;
+ALTER TABLE public.lessons ADD COLUMN IF NOT EXISTS pdf_url TEXT;

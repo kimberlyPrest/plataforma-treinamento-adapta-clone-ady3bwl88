@@ -4,18 +4,41 @@ import { VimeoPlayer } from '@/components/VimeoPlayer'
 interface LessonVideoPlayerProps {
   courseDescription?: string
   videoUrl?: string | null
+  pdfUrl?: string | null
+  content?: string | null
   title?: string
 }
 
 export function LessonVideoPlayer({
   courseDescription,
   videoUrl,
+  pdfUrl,
+  content,
   title,
 }: LessonVideoPlayerProps) {
   return (
     <div className="p-6 md:p-8 flex-1 flex flex-col">
-      {/* Vimeo Player Component */}
-      <VimeoPlayer videoUrl={videoUrl} title={title} className="mb-8" />
+      {videoUrl && (
+        <VimeoPlayer videoUrl={videoUrl} title={title} className="mb-8" />
+      )}
+
+      {pdfUrl && (
+        <div className="mb-8 w-full aspect-[16/9] bg-gray-100 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+          <iframe src={pdfUrl} className="w-full h-full" title="PDF Viewer" />
+        </div>
+      )}
+
+      {content && (
+        <div className="mb-8 prose prose-sm max-w-none text-gray-800 bg-gray-50 p-6 rounded-lg border border-gray-100 whitespace-pre-wrap shadow-sm">
+          {content}
+        </div>
+      )}
+
+      {!videoUrl && !pdfUrl && !content && (
+        <div className="mb-8 flex items-center justify-center p-12 bg-gray-50 border border-gray-200 rounded-lg text-gray-400 text-sm">
+          No content has been added to this lesson yet.
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs defaultValue="description" className="w-full">

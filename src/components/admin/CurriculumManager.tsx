@@ -10,7 +10,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Plus, Trash, Edit, Video, Clock, CheckCircle } from 'lucide-react'
+import {
+  Plus,
+  Trash,
+  Edit,
+  Video,
+  Clock,
+  CheckCircle,
+  FileText,
+  AlignLeft,
+} from 'lucide-react'
 
 interface Lesson {
   id: string
@@ -19,6 +28,8 @@ interface Lesson {
   is_test: boolean
   order_index: number
   video_url?: string
+  content?: string
+  pdf_url?: string
 }
 
 interface Module {
@@ -59,6 +70,8 @@ export function CurriculumManager({ courseId }: { courseId: string }) {
                   is_test: l.is_test || false,
                   order_index: l.order_index,
                   video_url: l.video_url || undefined,
+                  content: l.content || undefined,
+                  pdf_url: l.pdf_url || undefined,
                 }))
             : [],
       }))
@@ -95,6 +108,8 @@ export function CurriculumManager({ courseId }: { courseId: string }) {
       duration: editingLesson.duration || '00:00',
       is_test: editingLesson.is_test || false,
       video_url: editingLesson.video_url || null,
+      content: editingLesson.content || null,
+      pdf_url: editingLesson.pdf_url || null,
       module_id: activeModuleId,
     }
 
@@ -181,11 +196,29 @@ export function CurriculumManager({ courseId }: { courseId: string }) {
                       className="flex items-center justify-between group bg-white border border-gray-100 hover:border-gray-300 p-3 rounded-md transition-all"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="p-2 bg-gray-50 rounded text-gray-400">
+                        <div className="p-2 bg-gray-50 rounded text-gray-400 flex items-center gap-1.5">
                           {lesson.is_test ? (
                             <CheckCircle className="w-4 h-4" />
                           ) : (
-                            <Video className="w-4 h-4" />
+                            <>
+                              {lesson.video_url && (
+                                <Video className="w-4 h-4" title="Video" />
+                              )}
+                              {lesson.pdf_url && (
+                                <FileText className="w-4 h-4" title="PDF" />
+                              )}
+                              {lesson.content && (
+                                <AlignLeft
+                                  className="w-4 h-4"
+                                  title="Text Content"
+                                />
+                              )}
+                              {!lesson.video_url &&
+                                !lesson.pdf_url &&
+                                !lesson.content && (
+                                  <Video className="w-4 h-4" />
+                                )}
+                            </>
                           )}
                         </div>
                         <div className="flex flex-col">
@@ -247,7 +280,7 @@ export function CurriculumManager({ courseId }: { courseId: string }) {
         open={!!editingLesson}
         onOpenChange={(open) => !open && setEditingLesson(null)}
       >
-        <DialogContent className="sm:max-w-[500px] bg-white border-gray-200 shadow-xl">
+        <DialogContent className="sm:max-w-[500px] bg-white border-gray-200 shadow-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold tracking-tight text-[#111111] uppercase">
               {editingLesson?.id ? 'Edit Lesson' : 'Add New Lesson'}
@@ -317,8 +350,42 @@ export function CurriculumManager({ courseId }: { courseId: string }) {
                     video_url: e.target.value,
                   }))
                 }
-                placeholder="https://..."
+                placeholder="https://vimeo.com/..."
                 className="bg-gray-50 border-gray-200"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-500 uppercase tracking-wide">
+                PDF URL
+              </Label>
+              <Input
+                value={editingLesson?.pdf_url || ''}
+                onChange={(e) =>
+                  setEditingLesson((prev) => ({
+                    ...prev,
+                    pdf_url: e.target.value,
+                  }))
+                }
+                placeholder="https://example.com/file.pdf"
+                className="bg-gray-50 border-gray-200"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-500 uppercase tracking-wide">
+                Text Content
+              </Label>
+              <textarea
+                value={editingLesson?.content || ''}
+                onChange={(e) =>
+                  setEditingLesson((prev) => ({
+                    ...prev,
+                    content: e.target.value,
+                  }))
+                }
+                placeholder="Write lesson text or instructions..."
+                className="flex min-h-[120px] w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#111111] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
 
