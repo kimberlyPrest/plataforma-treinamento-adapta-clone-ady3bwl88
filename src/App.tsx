@@ -8,6 +8,7 @@ import NotFound from './pages/NotFound'
 import CourseDetails from './pages/CourseDetails'
 import LessonPlayer from './pages/LessonPlayer'
 import Login from './pages/Login'
+import Landing from './pages/Landing'
 import Layout from './components/Layout'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminCourseEdit from './pages/admin/AdminCourseEdit'
@@ -28,10 +29,11 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Login />} />
+            <Route path="/" element={<Landing />} />
 
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
-                <Route path="/" element={<Index />} />
+                <Route path="/dashboard" element={<Index />} />
                 <Route path="/course/:courseId" element={<CourseDetails />} />
                 <Route
                   path="/course/:courseId/lesson/:lessonId"
